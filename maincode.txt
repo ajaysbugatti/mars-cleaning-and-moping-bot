@@ -1,0 +1,125 @@
+#include <Servo.h>
+Servo esc_signal;
+Servo myservo2;
+int pos = 0;
+int r_motor_n = 4; //PWM control Right Motor  forward
+int r_motor_p = 2; //PWM control Right Motor -  back
+int r_motor_pwm = 11;
+int l_motor_p = 9; //PWM control Left Motor -
+int l_motor_n = 5; //PWM control Left Motor +
+int l_motor_pwm = 12;
+bool flag_servo=false, flag_vaccuum=false;
+int speedy = 200;
+char ch;
+int incomingByte = 0;
+void setup()
+{
+  Serial1.begin(38400);
+  myservo2.attach(10);
+  esc_signal.attach(6.);  //Specify here the pin number on which the signal pin of ESC is connected.
+  esc_signal.write(30);   //ESC arm command. ESCs won't start unless input speed is less during initialization.
+  delay(300);
+
+  pinMode(r_motor_n, OUTPUT); //Set control pins to be outputs
+  pinMode(r_motor_p, OUTPUT);
+  pinMode(r_motor_pwm, OUTPUT);
+  pinMode(l_motor_p, OUTPUT);
+  pinMode(l_motor_n, OUTPUT);
+  pinMode(l_motor_pwm, OUTPUT);
+
+  Serial.begin(9600);
+}
+void loop()
+{
+  if (Serial1.available()) {
+    Serial.print(" avail ");
+    ch = Serial1.read();
+  }
+  switch (ch)
+  {
+    case 'F':
+      {
+        digitalWrite(r_motor_n, HIGH);
+        digitalWrite(r_motor_p, LOW);
+        analogWrite(r_motor_pwm, speedy);
+        digitalWrite(l_motor_p, LOW);
+        digitalWrite(l_motor_n, HIGH);
+        analogWrite(l_motor_pwm, speedy);
+        break;
+      }
+    case 'B':
+      { digitalWrite(r_motor_n, LOW);
+        digitalWrite(r_motor_p, HIGH);
+        analogWrite(r_motor_pwm, speedy);
+        digitalWrite(l_motor_p, HIGH);
+        digitalWrite(l_motor_n, LOW);
+        analogWrite(l_motor_pwm, speedy);
+        break;
+      }
+    case 'L':
+      { digitalWrite(r_motor_n, LOW);
+        digitalWrite(r_motor_p, HIGH);
+        analogWrite(r_motor_pwm, speedy);
+        digitalWrite(l_motor_p, LOW);
+        digitalWrite(l_motor_n, HIGH);
+        analogWrite(l_motor_pwm, speedy);
+        break;
+      }
+    case 'R':
+      { digitalWrite(r_motor_n, HIGH);
+        digitalWrite(r_motor_p, LOW);
+        analogWrite(r_motor_pwm, speedy);
+        digitalWrite(l_motor_p, HIGH);
+        digitalWrite(l_motor_n, LOW);
+        analogWrite(l_motor_pwm, speedy);
+        break;
+      }
+     case 'X':
+      { digitalWrite(r_motor_n, LOW);
+        digitalWrite(r_motor_p, LOW);
+
+        digitalWrite(l_motor_p, LOW);
+        digitalWrite(l_motor_n, LOW);
+        flag_servo=false;
+        flag_vaccuum=false;
+        break;
+      } 
+      default:
+      { digitalWrite(r_motor_n, HIGH);
+        digitalWrite(r_motor_p, HIGH);
+
+        digitalWrite(l_motor_p, HIGH);
+        digitalWrite(l_motor_n, HIGH);
+        flag_servo=false;
+        flag_vaccuum=false;
+        break;
+      } 
+  }
+  if (ch == 'S')
+    flag_servo = !flag_servo;
+
+  else if (ch == 'V')
+    flag_vaccuum = !flag_vaccuum;
+
+  Serial.println(flag_servo);
+  if (!flag_vaccuum)
+    esc_signal.write(0);
+  else
+  {
+    esc_signal.write(120);    //Vary this between 40-130 to change the speed of motor. Higher value, higher speed.13
+    delay(70);
+  }
+  if ( !flag_servo)
+    myservo2.write(11);
+  else
+  { // waits 15ms for the servo to reach the position
+    for (pos = 120; pos >= 0; pos -= 1) { // goes from 0 degrees to 180 degrees
+      // in steps of 1 degree
+      myservo2.write(pos);              // tell servo to go to position in variable 'pos'
+      delay(20);                       // waits 15ms for the servo to reach the position
+    }
+    
+  }
+
+
+}
